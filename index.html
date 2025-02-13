@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Calendrier</title>
+<meta property="og:title" content="Calendrier">
+<meta property="og:url" content="https://neatnik.net/calendar">
+<meta property="og:description" content="Un calendrier imprimable avec toute l'année sur une seul page">
+<style>
+@import url('https://fonts.bunny.net/css?family=inter:300|oswald:300,400');
+@media print {
+  @page {
+    margin: 0;
+    padding: 1em;
+  }
+  #info {
+    display: none;
+  }
+  td {
+    font-size: 8px !important;
+  }
+  .weekend {
+    background: #d8d8d8 !important;
+  }
+}
+html {
+  font-family: 'Oswald';
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+table {
+  width: 100%;
+  height: calc(100% - 2.5em);
+  border-collapse: separate;
+  border-spacing: .5em 0;
+}
+td, th {
+  text-transform: uppercase;
+  border-bottom: 1px solid #888;
+  padding: .3vmin .3vmin;
+  font-size: .9vmin;
+  font-weight: 300;
+  color: #000;
+}
+th {
+  font-size: 1.1vmin;
+  padding: 0;
+}
+td:empty {
+  border: 0;
+}
+.date {
+  display: inline-block;
+  width: 1.1em;
+}
+.day {
+  display: inline-block;
+  text-align: center;
+  width: 1em;
+  color: #888;
+}
+.weekend {
+  background: #eee;
+  font-weight: 400;
+}
+p {
+  margin: 0 0 .5em 0;
+  text-align: center;
+}
+* {
+  color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+#info {
+  font-family: 'Inter', sans-serif;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 5em 2em;
+  width: calc(100% - 6em);
+  background: #333;
+  color: #eee;
+  padding: 1em 1em .5em 1em;
+  font-size: 2vmax;
+  border-radius: .2em;
+}
+#info p {
+  text-align: left;
+  margin: 0 0 1em 0;
+  line-height: 135%;
+}
+#info a {
+  color: inherit;
+}
+
+/* Ajout pour que la div calendarContainer fasse 100% de la hauteur de l'écran */
+#calendarContainer {
+  height: 100vh;
+}
+</style>
+</head>
+<body>
+<div id="info">
+  <p>👋 <strong>Bonjour !</strong> Si vous imprimez cette page, vous obtiendrez un calendrier astucieux affichant toutes les dates de l'année sur une seule page. Le format s'adapte automatiquement pour tenir sur un seul format de papier, quelle que soit sa taille. Pour de meilleurs résultats, réglez l'orientation en paysage et désactivez l'en-tête et le pied de page.</p>
+  <p>Par défaut, l'année en cours est utilisée. Vous pouvez la modifier en fournissant un paramètre <code>year</code> dans l'URL, par exemple : <a id="yearLink" href="?year=2027">?year=2027</a>.</p>
+  <p>Vous pouvez également activer l'affichage aligné par jours de la semaine en définissant le paramètre d'URL <code>layout</code> à <code>aligned-weekdays</code>, par exemple : <a href="?layout=aligned-weekdays">?layout=aligned-weekdays</a>.</p>
+  <p style="font-size: 80%; color: #999;">Réalisé par <a href="https://neatnik.net/">Neatnik</a> &#183; <a href="https://neatnik.net/dispenser/?project=calendar">Source</a></p>
+</div>
+<div id="calendarContainer"></div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Récupération des paramètres dans l'URL
+    const params = new URLSearchParams(window.location.search);
+    const currentYear = new Date().getFullYear();
+    // Par défaut, on utilise l'année en cours + 1
+    let year = params.get('year') ? parseInt(params.get('year')) : currentYear + 1;
+    
+    // Mise à jour du lien vers l'année suivante dans la zone d'info
+    const yearLink = document.getElementById("yearLink");
+    yearLink.href = `?year=${year + 1}`;
+    yearLink.textContent = `?year=${year + 1}`;
+
+    // Détermination du mode d'affichage du calendrier
+    const layout = params.get('layout');
+
+    // Détermination des jours de week-end (toujours samedi et dimanche)
+    const weekend_day_1 = 6;
+    const weekend_day_2 = 7;
+
+    // Création de l'élément table et de l'en-tête avec les abréviations des mois
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const headerTr = document.createElement("tr");
+    for (let m = 1; m <= 12; m++) {
+        const th = document.createElement("th");
+        const dateObj = new Date(year, m - 1, 1);
+        th.textContent = dateObj.toLocaleString('fr-FR', { month: 'short' }); // modifié en 'fr-FR'
+        headerTr.appendChild(th);
+    }
+    thead.appendChild(headerTr);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    // Pré-calcul des dates pour chaque mois (tableau 1-indexé)
+    const dates = {};
+    for (let m = 1; m <= 12; m++) {
+        dates[m] = [];
+        // Calcul du jour de la semaine du 1er jour du mois (ISO: lundi=1, dimanche=7)
+        const firstDay = new Date(year, m - 1, 1);
+        let firstWeekday = firstDay.getDay();
+        firstWeekday = firstWeekday === 0 ? 7 : firstWeekday;
+        let dayCounter = 1;
+        let flag = false;
+        const daysInMonth = new Date(year, m, 0).getDate();
+        for (let x = 1; x <= 42; x++) {
+            if (!flag) {
+                if (x === firstWeekday) {
+                    dates[m][x] = dayCounter;
+                    dayCounter++;
+                    flag = true;
+                } else {
+                    dates[m][x] = 0;
+                }
+            } else {
+                if (dayCounter > daysInMonth) {
+                    dates[m][x] = 0;
+                } else {
+                    dates[m][x] = dayCounter;
+                    dayCounter++;
+                }
+            }
+        }
+    }
+
+    // Construction des lignes du tableau en fonction du mode de layout
+    if (layout === 'aligned-weekdays') {
+        // Affichage en mode "aligned-weekdays" avec 42 lignes (matrice des dates)
+        for (let day = 1; day <= 42; day++) {
+            const tr = document.createElement("tr");
+            for (let m = 1; m <= 12; m++) {
+                const td = document.createElement("td");
+                const d = dates[m][day];
+                if (d === 0) {
+                    td.textContent = "";
+                } else {
+                    const currentDate = new Date(year, m - 1, d);
+                    // Conversion du jour de la semaine en ISO (dimanche=7)
+                    const isoWeekday = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
+                    if (isoWeekday === weekend_day_1 || isoWeekday === weekend_day_2) {
+                        td.classList.add("weekend");
+                    }
+                    td.textContent = d;
+                }
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+    } else {
+        // Affichage par défaut : une ligne par jour (jusqu'à 31)
+        for (let day = 1; day <= 31; day++) {
+            const tr = document.createElement("tr");
+            for (let m = 1; m <= 12; m++) {
+                const td = document.createElement("td");
+                const daysInMonth = new Date(year, m, 0).getDate();
+                if (day > daysInMonth) {
+                    td.textContent = "";
+                } else {
+                    const currentDate = new Date(year, m - 1, day);
+                    const isoWeekday = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
+                    if (isoWeekday === weekend_day_1 || isoWeekday === weekend_day_2) {
+                        td.classList.add("weekend");
+                    }
+                    const spanDate = document.createElement("span");
+                    spanDate.className = "date";
+                    spanDate.textContent = day;
+                    const spanDay = document.createElement("span");
+                    spanDay.className = "day";
+                    // Première lettre de l'abréviation du jour en français
+                    spanDay.textContent = currentDate.toLocaleString('fr-FR', { weekday: 'short' }).charAt(0); // modifié en 'fr-FR'
+                    td.appendChild(spanDate);
+                    td.appendChild(document.createTextNode(" "));
+                    td.appendChild(spanDay);
+                }
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+    }
+
+    table.appendChild(tbody);
+
+    // Insertion du calendrier dans la page
+    const container = document.getElementById("calendarContainer");
+    const yearP = document.createElement("p");
+    yearP.textContent = year;
+    container.appendChild(yearP);
+    container.appendChild(table);
+});
+</script>
+</body>
+</html>
