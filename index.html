@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="utf-8">
 <title>Calendrier</title>
 <meta property="og:title" content="Calendrier">
-<meta property="og:url" content="https://neatnik.net/calendar">
+<meta property="og:url" content="https://alexandregrignon.github.io/calendrier/">
 <meta property="og:description" content="Un calendrier imprimable avec toute l'année sur une seul page">
 <style>
 @import url('https://fonts.bunny.net/css?family=inter:300|oswald:300,400');
@@ -104,10 +104,10 @@ p {
 </head>
 <body>
 <div id="info">
-  <p>👋 <strong>Bonjour !</strong> Si vous imprimez cette page, vous obtiendrez un calendrier astucieux affichant toutes les dates de l'année sur une seule page. Le format s'adapte automatiquement pour tenir sur un seul format de papier, quelle que soit sa taille. Pour de meilleurs résultats, réglez l'orientation en paysage et désactivez l'en-tête et le pied de page.</p>
+  <p>👋 <strong>Bonjour !</strong> Si vous imprimez cette page, vous obtiendrez un calendrier affichant toutes les dates de l'année sur une seule page. Le format s'adapte automatiquement pour tenir sur un seul format de papier, quelle que soit sa taille. Pour de meilleurs résultats, réglez l'orientation en paysage et désactivez l'en-tête et le pied de page.</p>
   <p>Par défaut, l'année en cours est utilisée. Vous pouvez la modifier en fournissant un paramètre <code>year</code> dans l'URL, par exemple : <a id="yearLink" href="?year=2027">?year=2027</a>.</p>
-  <p>Vous pouvez également activer l'affichage aligné par jours de la semaine en définissant le paramètre d'URL <code>layout</code> à <code>aligned-weekdays</code>, par exemple : <a href="?layout=aligned-weekdays">?layout=aligned-weekdays</a>.</p>
-  <p style="font-size: 80%; color: #999;">Réalisé par <a href="https://neatnik.net/">Neatnik</a> &#183; <a href="https://neatnik.net/dispenser/?project=calendar">Source</a></p>
+  <p>Vous pouvez également aligner les jours de la semaine en définissant le paramètre d'URL <code>layout</code> sur <code>aligned-weekdays</code> : <a href="?layout=aligned-weekdays">?layout=aligned-weekdays</a>.</p>
+  <p style="font-size: 80%; color: #999;"><a href="https://github.com/alexandregrignon/calendrier">Source</a> &#183; Adapté en français et en Javascript à partir du projet <a href="https://neatnik.net/dispenser/?project=calendar">Calendar</a> réalisé par <a href="https://neatnik.net/">Neatnik</a></p>
 </div>
 <div id="calendarContainer"></div>
 <script>
@@ -115,8 +115,8 @@ document.addEventListener("DOMContentLoaded", function() {
     // Récupération des paramètres dans l'URL
     const params = new URLSearchParams(window.location.search);
     const currentYear = new Date().getFullYear();
-    // Par défaut, on utilise l'année en cours + 1
-    let year = params.get('year') ? parseInt(params.get('year')) : currentYear + 1;
+    // Par défaut, on utilise l'année en cours
+    let year = params.get('year') ? parseInt(params.get('year')) : currentYear;
     
     // Mise à jour du lien vers l'année suivante dans la zone d'info
     const yearLink = document.getElementById("yearLink");
